@@ -81,7 +81,7 @@ fn pgn_round_trip_from_played_game() {
     }
     let pgn_text = pgn::to_pgn(&mut g);
 
-    let mut reparsed = pgn::from_pgn(&pgn_text).expect("reparse PGN");
+    let reparsed = pgn::from_pgn(&pgn_text).expect("reparse PGN");
     assert_eq!(reparsed.san_history(), g.san_history());
     assert_eq!(reparsed.fen(), g.fen());
 }
@@ -89,7 +89,7 @@ fn pgn_round_trip_from_played_game() {
 #[test]
 fn pgn_import_with_numbers_and_comments() {
     let pgn_text = "1. e4 {best by test} e5 2. Nf3 (2. f4 exf4) Nc6 3. Bb5 a6 *";
-    let mut g = pgn::from_pgn(pgn_text).expect("import");
+    let g = pgn::from_pgn(pgn_text).expect("import");
     assert_eq!(
         g.san_history(),
         &["e4", "e5", "Nf3", "Nc6", "Bb5", "a6"]
