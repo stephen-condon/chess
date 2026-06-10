@@ -16,13 +16,19 @@ export interface SearchRequest {
 
 export interface SearchResponse {
   id: number;
-  result: SearchInfo;
+  result?: SearchInfo;
+  error?: string;
 }
 
+const post = (r: SearchResponse) => (self as unknown as Worker).postMessage(r);
+
 self.onmessage = async (e: MessageEvent<SearchRequest>) => {
-  await ready;
   const { id, fen, timeMs, maxDepth } = e.data;
-  const result = search(fen, timeMs, maxDepth) as SearchInfo;
-  const response: SearchResponse = { id, result };
-  (self as unknown as Worker).postMessage(response);
+  try {
+    await ready;
+    const result = search(fen, timeMs, maxDepth) as SearchInfo;
+    post({ id, result });
+  } catch (err) {
+    post({ id, error: String(err) });
+  }
 };

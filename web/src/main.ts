@@ -148,9 +148,14 @@ function triggerAI(): void {
 }
 
 function onWorkerMessage(e: MessageEvent<SearchResponse>): void {
-  const { id, result } = e.data;
+  const { id, result, error } = e.data;
   if (id !== searchId) return; // stale (e.g. New Game pressed mid-search)
   thinking = false;
+  if (error || !result) {
+    showError("AI error: " + (error ?? "no result"));
+    render();
+    return;
+  }
   if (!result.bestMove) {
     render();
     return;
@@ -357,6 +362,11 @@ async function boot(): Promise<void> {
   board = new Board(boardEl, onSquareClick);
   worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = onWorkerMessage;
+  worker.onerror = (e) => {
+    thinking = false;
+    showError("AI worker error: " + (e.message || "unknown"));
+    render();
+  };
   wireControls();
   render();
 }

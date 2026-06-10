@@ -7,9 +7,11 @@
     "wasm": "wasm-pack build ../wasm --target web --out-dir ../web/src/wasm",
     "dev": "npm run wasm && vite",
     "build": "npm run wasm && tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "e2e": "npm run build && node e2e.mjs"
   },
   "devDependencies": {
+    "playwright": "^1.60.0",
     "typescript": "^5.4.0",
     "vite": "^5.2.0"
   }
