@@ -10,3 +10,4 @@ wasm/pkg-node
 web/node_modules
 web/dist
 web/src/wasm
+web/screenshot.png
