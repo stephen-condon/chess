@@ -2,6 +2,10 @@
 **/*.rs.bk
 Cargo.lock
 
+# wasm build outputs
+wasm/pkg
+wasm/pkg-node
+
 # web
 web/node_modules
 web/dist

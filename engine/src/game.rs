@@ -63,6 +63,18 @@ impl Game {
         movegen::legal_moves(&mut self.pos)
     }
 
+    /// Every legal move paired with its SAN string (for UI move lists / hints).
+    pub fn legal_moves_san(&mut self) -> Vec<(Move, String)> {
+        let slice: Vec<Move> = movegen::legal_moves(&mut self.pos).as_slice().to_vec();
+        slice
+            .iter()
+            .map(|&m| {
+                let s = san::to_san(&mut self.pos, m, &slice);
+                (m, s)
+            })
+            .collect()
+    }
+
     /// Distinct destination squares reachable from `sq` (for UI highlighting).
     pub fn legal_destinations(&mut self, sq: Square) -> Vec<Square> {
         let mut out: Vec<Square> = Vec::new();
