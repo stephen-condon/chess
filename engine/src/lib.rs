@@ -3,16 +3,22 @@
 pub mod attacks;
 pub mod bitboard;
 pub mod fen;
+pub mod game;
 pub mod magic;
 pub mod movegen;
 pub mod moves;
+pub mod pgn;
 pub mod position;
+pub mod rules;
+pub mod san;
 pub mod types;
 pub mod zobrist;
 
 pub use bitboard::Bitboard;
+pub use game::Game;
 pub use moves::{Move, MoveFlag, MoveList};
 pub use position::Position;
+pub use rules::{DrawReason, Status};
 pub use types::{CastleRights, Color, Piece, PieceType, Square};
 
 /// Count leaf nodes of the legal move tree to `depth`. The standard correctness

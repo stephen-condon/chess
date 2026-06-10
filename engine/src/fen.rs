@@ -83,6 +83,18 @@ pub fn parse(fen: &str) -> Result<Position, String> {
         pos.hash ^= crate::zobrist::side_to_move();
     }
 
+    // Reject illegal positions that would corrupt move generation.
+    for color in [Color::White, Color::Black] {
+        let kings = pos.pieces(color, crate::types::PieceType::King).count();
+        if kings != 1 {
+            return Err(format!("{:?} must have exactly one king, found {}", color, kings));
+        }
+    }
+    // The side not to move must not be in check (it would be their king's turn).
+    if pos.in_check(pos.side.opp()) {
+        return Err("side not to move is in check (illegal position)".into());
+    }
+
     Ok(pos)
 }
 
