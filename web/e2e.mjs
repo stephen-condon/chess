@@ -88,6 +88,20 @@ try {
   console.log("errors:\n" + errors.join("\n"));
 }
 check(vsText.split(/\s+/).length >= 2, "computer replied with a move");
+
+// --- PGN export stamps today's local date ---
+// The Import/Export controls live in a collapsed <details>; open it first.
+await page.locator("details.io > summary").click();
+await page.locator("#export-pgn").click();
+const pgn = await page.locator("#pgn").inputValue();
+const dateLine = pgn.split("\n").find((l) => l.startsWith("[Date"));
+const today = (() => {
+  const d = new Date();
+  const p = (x) => String(x).padStart(2, "0");
+  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
+})();
+check(dateLine === `[Date "${today}"]`, `PGN export carries today's date (got ${dateLine})`);
+
 check(errors.length === 0, "no page/console errors: " + errors.join(" | "));
 
 await browser.close();
