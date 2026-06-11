@@ -69,6 +69,18 @@
               <button id="load-pgn" class="btn small">Import</button>
               <button id="export-pgn" class="btn small">Export</button>
             </div>
+
+            <div class="io-row">
+              <label for="analysis-speed" class="sr-only">Analysis speed</label>
+              <select id="analysis-speed">
+                <option value="fast">Fast</option>
+                <option value="balanced" selected>Balanced</option>
+                <option value="deep">Deep</option>
+              </select>
+              <button id="analyze-game" class="btn small" disabled>Analyze Game</button>
+            </div>
+            <p id="analysis-progress" class="analysis-progress" hidden></p>
+            <div id="analysis-summary" class="analysis-summary" hidden></div>
           </div>
         </details>
 

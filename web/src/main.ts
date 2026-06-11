@@ -1,14 +1,18 @@
 import { Board } from "./board.js";
+import { analyzeGame } from "./analysis.js";
 import { loadEngine, Game } from "./engine.js";
 import {
+  ANALYSIS_SPEEDS,
   DIFFICULTIES,
+  type AnalysisSpeed,
   type Difficulty,
+  type GameReport,
   type Mode,
   type MoveResult,
   type Side,
   type StatusInfo,
 } from "./types.js";
-import type { SearchRequest, SearchResponse } from "./worker.js";
+import type { SearchRequest, WorkerResponse } from "./worker.js";
 
 // --- DOM helpers -----------------------------------------------------------
 
@@ -23,6 +27,9 @@ const statusEl = $("status");
 const movesEl = $("moves");
 const ioError = $("io-error");
 const promotionEl = $("promotion");
+const analyzeBtn = $<HTMLButtonElement>("analyze-game");
+const analysisProgressEl = $("analysis-progress");
+const analysisSummaryEl = $("analysis-summary");
 
 // --- App state -------------------------------------------------------------
 
@@ -40,6 +47,8 @@ let targets: number[] = [];
 let lastMove: { from: number; to: number } | null = null;
 let pendingPromotion: { from: number; to: number } | null = null;
 let thinking = false;
+let analyzing = false;
+let analysisSpeed: AnalysisSpeed = "balanced";
 let searchId = 0;
 
 // --- Square helpers --------------------------------------------------------
@@ -72,6 +81,7 @@ function render(): void {
 
   renderStatus(status);
   renderMoves();
+  analyzeBtn.disabled = analyzing || thinking || status.state === "ongoing";
 }
 
 function renderStatus(status: StatusInfo): void {
@@ -143,11 +153,12 @@ function triggerAI(): void {
   renderStatus(game.status() as StatusInfo);
   const { timeMs, maxDepth } = DIFFICULTIES[difficulty];
   searchId += 1;
-  const req: SearchRequest = { id: searchId, fen: game.fen(), timeMs, maxDepth };
+  const req: SearchRequest = { id: searchId, kind: "search", fen: game.fen(), timeMs, maxDepth };
   worker.postMessage(req);
 }
 
-function onWorkerMessage(e: MessageEvent<SearchResponse>): void {
+function onWorkerMessage(e: MessageEvent<WorkerResponse>): void {
+  if (e.data.kind === "analyze") return; // this worker is only used for search
   const { id, result, error } = e.data;
   if (id !== searchId) return; // stale (e.g. New Game pressed mid-search)
   thinking = false;
@@ -170,6 +181,82 @@ function onWorkerMessage(e: MessageEvent<SearchResponse>): void {
   }
   lastMove = { from, to };
   render();
+}
+
+// --- Post-game analysis -----------------------------------------------------
+
+function resetAnalysisUI(): void {
+  analyzing = false;
+  analysisProgressEl.hidden = true;
+  analysisProgressEl.textContent = "";
+  analysisSummaryEl.hidden = true;
+  analysisSummaryEl.replaceChildren();
+}
+
+async function runAnalysis(): Promise<void> {
+  if (analyzing || thinking) return;
+  analyzing = true;
+  analysisSummaryEl.hidden = true;
+  analysisSummaryEl.replaceChildren();
+  analysisProgressEl.hidden = false;
+  analysisProgressEl.textContent = "Analyzing…";
+  render();
+
+  try {
+    const { timeMs, maxDepth } = ANALYSIS_SPEEDS[analysisSpeed];
+    const report = await analyzeGame(game.toPgn(), { timeMs, maxDepth }, (done, total) => {
+      analysisProgressEl.textContent = `Analyzing… ${done}/${total}`;
+    });
+    $<HTMLTextAreaElement>("pgn").value = report.annotatedPgn;
+    renderAnalysisSummary(report);
+  } catch (e) {
+    showError(String(e));
+  } finally {
+    analyzing = false;
+    analysisProgressEl.hidden = true;
+    render();
+  }
+}
+
+function renderAnalysisSummary(report: GameReport): void {
+  analysisSummaryEl.replaceChildren();
+
+  const table = document.createElement("table");
+  const header = table.insertRow();
+  for (const text of ["", "White", "Black"]) {
+    const th = document.createElement("th");
+    th.textContent = text;
+    header.appendChild(th);
+  }
+
+  const rows: [string, string, string][] = [
+    ["Accuracy", `${report.white.accuracy.toFixed(1)}%`, `${report.black.accuracy.toFixed(1)}%`],
+    ["Avg. CPL", `${report.white.avgCpl}`, `${report.black.avgCpl}`],
+    ["Inaccuracies", `${report.white.inaccuracies}`, `${report.black.inaccuracies}`],
+    ["Mistakes", `${report.white.mistakes}`, `${report.black.mistakes}`],
+    ["Blunders", `${report.white.blunders}`, `${report.black.blunders}`],
+  ];
+  for (const [label, white, black] of rows) {
+    const row = table.insertRow();
+    row.insertCell().textContent = label;
+    row.insertCell().textContent = white;
+    row.insertCell().textContent = black;
+  }
+  analysisSummaryEl.appendChild(table);
+
+  const decisive = report.moves.find((m) => m.decidedGame);
+  const note = document.createElement("p");
+  note.className = "decisive";
+  if (decisive) {
+    const moveNo = Math.floor(decisive.ply / 2) + 1;
+    const side = decisive.color === "white" ? "White" : "Black";
+    note.textContent = `Decided by ${side}'s ${decisive.san} (move ${moveNo}).`;
+  } else {
+    note.textContent = "No single move decided the game.";
+  }
+  analysisSummaryEl.appendChild(note);
+
+  analysisSummaryEl.hidden = false;
 }
 
 // --- Click handling --------------------------------------------------------
@@ -239,6 +326,7 @@ function newGame(): void {
   lastMove = null;
   pendingPromotion = null;
   promotionEl.hidden = true;
+  resetAnalysisUI();
   render();
   if (mode === "computer" && humanSide === "black") triggerAI();
 }
@@ -271,6 +359,7 @@ function resetAfterLoad(): void {
   lastMove = null;
   pendingPromotion = null;
   promotionEl.hidden = true;
+  resetAnalysisUI();
   render();
   if (mode === "computer" && (game.status() as StatusInfo).turn !== humanSide) {
     triggerAI();
@@ -340,6 +429,14 @@ function wireControls(): void {
   });
   $("export-pgn").addEventListener("click", () => {
     $<HTMLTextAreaElement>("pgn").value = game.toPgn();
+  });
+
+  const speedSel = $<HTMLSelectElement>("analysis-speed");
+  speedSel.addEventListener("change", () => {
+    analysisSpeed = speedSel.value as AnalysisSpeed;
+  });
+  analyzeBtn.addEventListener("click", () => {
+    void runAnalysis();
   });
 
   for (const btn of promotionEl.querySelectorAll<HTMLButtonElement>(".promo-btn")) {

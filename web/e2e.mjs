@@ -102,6 +102,43 @@ const today = (() => {
 })();
 check(dateLine === `[Date "${today}"]`, `PGN export carries today's date (got ${dateLine})`);
 
+// --- Game analyzer: forced mate enables Analyze, producing an annotated PGN ---
+await page.selectOption("#mode", "hotseat");
+check(await page.locator("#analyze-game").isDisabled(), "Analyze button disabled while game is ongoing");
+
+for (const [from, to] of [
+  ["f2", "f3"],
+  ["e7", "e5"],
+  ["g2", "g4"],
+  ["d8", "h4"],
+]) {
+  await clickSquare(from);
+  await clickSquare(to);
+}
+await page
+  .waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Checkmate"), null, {
+    timeout: 4000,
+  })
+  .catch(() => {});
+check((await page.locator("#status").textContent())?.includes("Checkmate"), "fool's mate ends in checkmate");
+check(!(await page.locator("#analyze-game").isDisabled()), "Analyze button enables once the game is over");
+
+await page.selectOption("#analysis-speed", "fast");
+await page.locator("#analyze-game").click();
+await page
+  .waitForFunction(() => document.querySelector("#analysis-summary")?.hidden === false, null, {
+    timeout: 20000,
+  })
+  .catch(() => {});
+
+const annotatedPgn = await page.locator("#pgn").inputValue();
+check(annotatedPgn.includes("{"), "annotated PGN includes eval comments");
+check(/\?\?|\?!|\?/.test(annotatedPgn), "annotated PGN includes a NAG glyph");
+
+const summaryText = await page.locator("#analysis-summary").textContent();
+check(summaryText?.includes("Accuracy"), "analysis summary shows accuracy");
+check(summaryText?.includes("Decided by"), "analysis summary shows the deciding move");
+
 check(errors.length === 0, "no page/console errors: " + errors.join(" | "));
 
 await browser.close();

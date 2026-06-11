@@ -5,7 +5,9 @@
 //! crosses the boundary as plain JS objects via serde, with moves as UCI
 //! strings and positions/games as FEN/PGN.
 
-use chess_engine::{fen, pgn, Color, DrawReason, Game as CoreGame, PieceType, SearchLimits, Status};
+use chess_engine::{
+    fen, pgn, Color, DrawReason, Game as CoreGame, MoveClass, PieceType, SearchLimits, SideSummary, Status,
+};
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
@@ -76,6 +78,66 @@ struct SearchInfo {
     depth: u8,
     nodes: u64,
     pv: Vec<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AnalyzedMoveInfo {
+    ply: usize,
+    color: String,
+    san: String,
+    best_san: String,
+    eval_before: i32,
+    eval_after: i32,
+    cpl: i32,
+    /// "best" | "good" | "inaccuracy" | "mistake" | "blunder"
+    class: String,
+    turning_point: bool,
+    decided_game: bool,
+    pv_san: Vec<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SideSummaryInfo {
+    accuracy: f32,
+    avg_cpl: i32,
+    best: u32,
+    inaccuracies: u32,
+    mistakes: u32,
+    blunders: u32,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GameReportInfo {
+    moves: Vec<AnalyzedMoveInfo>,
+    white: SideSummaryInfo,
+    black: SideSummaryInfo,
+    /// "1-0" | "0-1" | "1/2-1/2" | "*"
+    result: String,
+    annotated_pgn: String,
+}
+
+fn move_class_name(c: MoveClass) -> &'static str {
+    match c {
+        MoveClass::Best => "best",
+        MoveClass::Good => "good",
+        MoveClass::Inaccuracy => "inaccuracy",
+        MoveClass::Mistake => "mistake",
+        MoveClass::Blunder => "blunder",
+    }
+}
+
+fn side_summary_info(s: &SideSummary) -> SideSummaryInfo {
+    SideSummaryInfo {
+        accuracy: s.accuracy,
+        avg_cpl: s.avg_cpl,
+        best: s.best,
+        inaccuracies: s.inaccuracies,
+        mistakes: s.mistakes,
+        blunders: s.blunders,
+    }
 }
 
 fn status_info(game: &mut CoreGame) -> StatusInfo {
@@ -252,6 +314,46 @@ pub fn search(fen_str: &str, time_ms: u32, max_depth: u8) -> Result<JsValue, JsV
         depth: res.depth,
         nodes: res.nodes,
         pv: res.pv.iter().map(|m| m.to_uci()).collect(),
+    };
+    Ok(serde_wasm_bindgen::to_value(&info).unwrap())
+}
+
+/// Analyze a finished game given as PGN. Intended to run in a Web Worker.
+/// `progress(done, total)` is called once per searched position so the caller
+/// can report progress for long games.
+#[wasm_bindgen]
+pub fn analyze(pgn_str: &str, time_ms: u32, max_depth: u8, progress: &js_sys::Function) -> Result<JsValue, JsValue> {
+    let mut game = pgn::from_pgn(pgn_str).map_err(err_to_js)?;
+    let limits = SearchLimits {
+        max_depth,
+        time_ms: time_ms as u64,
+    };
+    let report = chess_engine::analyze(&mut game, limits, || js_sys::Date::now() as u64, |done, total| {
+        let _ = progress.call2(&JsValue::NULL, &JsValue::from(done as u32), &JsValue::from(total as u32));
+    });
+
+    let info = GameReportInfo {
+        moves: report
+            .moves
+            .iter()
+            .map(|m| AnalyzedMoveInfo {
+                ply: m.ply,
+                color: color_name(m.color).to_string(),
+                san: m.san.clone(),
+                best_san: m.best_san.clone(),
+                eval_before: m.eval_before,
+                eval_after: m.eval_after,
+                cpl: m.cpl,
+                class: move_class_name(m.class).to_string(),
+                turning_point: m.turning_point,
+                decided_game: m.decided_game,
+                pv_san: m.pv_san.clone(),
+            })
+            .collect(),
+        white: side_summary_info(&report.white),
+        black: side_summary_info(&report.black),
+        result: report.result,
+        annotated_pgn: report.annotated_pgn,
     };
     Ok(serde_wasm_bindgen::to_value(&info).unwrap())
 }

@@ -88,7 +88,7 @@ pub fn from_pgn(pgn: &str) -> Result<Game, String> {
     Ok(game)
 }
 
-fn result_string(status: Status) -> String {
+pub(crate) fn result_string(status: Status) -> String {
     match status {
         Status::Checkmate(Color::White) => "0-1",
         Status::Checkmate(Color::Black) => "1-0",
@@ -166,7 +166,7 @@ fn is_result(tok: &str) -> bool {
 }
 
 /// Wrap text at a column boundary on spaces.
-fn wrap(text: &str, width: usize) -> String {
+pub(crate) fn wrap(text: &str, width: usize) -> String {
     let mut out = String::new();
     let mut line_len = 0;
     for word in text.split_whitespace() {

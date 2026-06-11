@@ -1,5 +1,6 @@
 //! A bitboard chess engine: move generation, search, and evaluation.
 
+pub mod analysis;
 pub mod attacks;
 pub mod bitboard;
 pub mod eval;
@@ -17,6 +18,7 @@ pub mod tt;
 pub mod types;
 pub mod zobrist;
 
+pub use analysis::{analyze, AnalyzedMove, GameReport, MoveClass, SideSummary};
 pub use bitboard::Bitboard;
 pub use game::Game;
 pub use moves::{Move, MoveFlag, MoveList};
