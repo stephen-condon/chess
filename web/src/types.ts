@@ -44,3 +44,44 @@ export const DIFFICULTIES: Record<Difficulty, DifficultySetting> = {
   medium: { timeMs: 600, maxDepth: 8 },
   hard: { timeMs: 2000, maxDepth: 64 },
 };
+
+export type MoveClass = "best" | "good" | "inaccuracy" | "mistake" | "blunder";
+
+export interface AnalyzedMove {
+  ply: number;
+  color: "white" | "black";
+  san: string;
+  bestSan: string;
+  evalBefore: number;
+  evalAfter: number;
+  cpl: number;
+  class: MoveClass;
+  turningPoint: boolean;
+  decidedGame: boolean;
+  pvSan: string[];
+}
+
+export interface SideSummary {
+  accuracy: number;
+  avgCpl: number;
+  best: number;
+  inaccuracies: number;
+  mistakes: number;
+  blunders: number;
+}
+
+export interface GameReport {
+  moves: AnalyzedMove[];
+  white: SideSummary;
+  black: SideSummary;
+  result: string;
+  annotatedPgn: string;
+}
+
+export type AnalysisSpeed = "fast" | "balanced" | "deep";
+
+export const ANALYSIS_SPEEDS: Record<AnalysisSpeed, DifficultySetting> = {
+  fast: { timeMs: 100, maxDepth: 8 },
+  balanced: { timeMs: 250, maxDepth: 12 },
+  deep: { timeMs: 750, maxDepth: 20 },
+};
