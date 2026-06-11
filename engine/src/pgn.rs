@@ -9,14 +9,20 @@ use crate::game::Game;
 use crate::rules::Status;
 use crate::types::Color;
 
-pub fn to_pgn(game: &mut Game) -> String {
+/// Serialize a game to PGN.
+///
+/// `date` fills the `Date` tag and must be in PGN `YYYY.MM.DD` form; pass `None`
+/// when the date is unknown (emits the `????.??.??` placeholder). The engine has
+/// no clock of its own, so callers supply the date (the WASM layer uses
+/// `js_sys::Date`).
+pub fn to_pgn(game: &mut Game, date: Option<&str>) -> String {
     let result = result_string(game.status());
     let start = fen::parse(game.start_fen()).expect("valid start FEN");
 
     let mut out = String::new();
     out.push_str("[Event \"Casual Game\"]\n");
     out.push_str("[Site \"local\"]\n");
-    out.push_str("[Date \"????.??.??\"]\n");
+    out.push_str(&format!("[Date \"{}\"]\n", date.unwrap_or("????.??.??")));
     out.push_str("[Round \"-\"]\n");
     out.push_str("[White \"White\"]\n");
     out.push_str("[Black \"Black\"]\n");

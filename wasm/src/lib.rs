@@ -25,6 +25,18 @@ fn color_name(c: Color) -> &'static str {
     }
 }
 
+/// Today's local date as a PGN `YYYY.MM.DD` string.
+fn today_pgn_date() -> String {
+    let now = js_sys::Date::new_0();
+    // `get_month` is 0-based; the rest are already calendar values.
+    format!(
+        "{:04}.{:02}.{:02}",
+        now.get_full_year(),
+        now.get_month() + 1,
+        now.get_date()
+    )
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct MoveInfo {
@@ -124,7 +136,7 @@ impl Game {
 
     #[wasm_bindgen(js_name = toPgn)]
     pub fn to_pgn(&mut self) -> String {
-        pgn::to_pgn(&mut self.inner)
+        pgn::to_pgn(&mut self.inner, Some(&today_pgn_date()))
     }
 
     /// 64-character board string, index = square (a1=0 … h8=63). Each char is a

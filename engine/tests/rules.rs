@@ -79,7 +79,7 @@ fn pgn_round_trip_from_played_game() {
     for m in moves {
         g.play_san(m).expect(m);
     }
-    let pgn_text = pgn::to_pgn(&mut g);
+    let pgn_text = pgn::to_pgn(&mut g, None);
 
     let reparsed = pgn::from_pgn(&pgn_text).expect("reparse PGN");
     assert_eq!(reparsed.san_history(), g.san_history());
