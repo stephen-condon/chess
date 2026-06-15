@@ -5,6 +5,7 @@
 //! oracle in tests).
 
 use crate::bitboard::Bitboard;
+use crate::rng::SplitMix64;
 use crate::types::Square;
 use std::sync::OnceLock;
 
@@ -39,7 +40,7 @@ static MAGICS: OnceLock<Magics> = OnceLock::new();
 
 fn magics() -> &'static Magics {
     MAGICS.get_or_init(|| {
-        let mut rng = Rng::new(0x1234_5678_9abc_def0);
+        let mut rng = SplitMix64::new(0x1234_5678_9abc_def0);
         Magics {
             rook: (0..64)
                 .map(|s| build_magic(Square(s), &ROOK_DIRS, &mut rng))
@@ -97,7 +98,7 @@ fn relevant_mask(sq: Square, dirs: &[(i8, i8); 4]) -> u64 {
     mask
 }
 
-fn build_magic(sq: Square, dirs: &[(i8, i8); 4], rng: &mut Rng) -> Magic {
+fn build_magic(sq: Square, dirs: &[(i8, i8); 4], rng: &mut SplitMix64) -> Magic {
     let mask = relevant_mask(sq, dirs);
     let bits = mask.count_ones();
     let size = 1usize << bits;
@@ -160,26 +161,4 @@ pub fn bishop_attacks(sq: Square, occ: Bitboard) -> Bitboard {
 #[inline]
 pub fn queen_attacks(sq: Square, occ: Bitboard) -> Bitboard {
     rook_attacks(sq, occ) | bishop_attacks(sq, occ)
-}
-
-/// splitmix64-based PRNG, sufficient for magic search.
-struct Rng(u64);
-
-impl Rng {
-    fn new(seed: u64) -> Rng {
-        Rng(seed)
-    }
-
-    fn next(&mut self) -> u64 {
-        self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
-        let mut z = self.0;
-        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
-        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
-        z ^ (z >> 31)
-    }
-
-    /// Sparse random number (AND of three draws) — good magic candidates.
-    fn sparse(&mut self) -> u64 {
-        self.next() & self.next() & self.next()
-    }
 }

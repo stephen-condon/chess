@@ -8,6 +8,7 @@ use crate::rules::{self, DrawReason, Status};
 use crate::san;
 use crate::fen;
 use crate::types::{Color, PieceType, Square};
+use std::str::FromStr;
 
 #[derive(Clone)]
 pub struct Game {
@@ -146,7 +147,7 @@ impl Game {
     ) -> Result<String, String> {
         let mv = self
             .find_legal(from, to, promo)
-            .ok_or_else(|| format!("no legal move {}{}", from.to_string(), to.to_string()))?;
+            .ok_or_else(|| format!("no legal move {}{}", from, to))?;
         self.play(mv)
     }
 
@@ -212,8 +213,8 @@ fn parse_uci(uci: &str) -> Result<(Square, Square, Option<PieceType>), String> {
     if uci.len() < 4 {
         return Err(format!("bad UCI move '{}'", uci));
     }
-    let from = Square::from_str(&uci[0..2]).ok_or(format!("bad from in '{}'", uci))?;
-    let to = Square::from_str(&uci[2..4]).ok_or(format!("bad to in '{}'", uci))?;
+    let from = Square::from_str(&uci[0..2]).map_err(|_| format!("bad from in '{}'", uci))?;
+    let to = Square::from_str(&uci[2..4]).map_err(|_| format!("bad to in '{}'", uci))?;
     let promo = uci.chars().nth(4).and_then(PieceType::from_char);
     Ok((from, to, promo))
 }

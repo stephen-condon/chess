@@ -5,14 +5,9 @@
 
 use chess_engine::analysis::{analyze, MoveClass};
 use chess_engine::{pgn, Game, SearchLimits, Status};
-use std::time::{SystemTime, UNIX_EPOCH};
 
-fn now_ms() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64
-}
+mod common;
+use common::now_ms;
 
 const LIMITS: SearchLimits = SearchLimits {
     max_depth: 4,

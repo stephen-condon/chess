@@ -8,12 +8,9 @@ pub struct Bitboard(pub u64);
 
 pub const FILE_A: u64 = 0x0101_0101_0101_0101;
 pub const FILE_H: u64 = 0x8080_8080_8080_8080;
-pub const RANK_1: u64 = 0x0000_0000_0000_00FF;
-pub const RANK_8: u64 = 0xFF00_0000_0000_0000;
 
 impl Bitboard {
     pub const EMPTY: Bitboard = Bitboard(0);
-    pub const FULL: Bitboard = Bitboard(!0);
 
     #[inline]
     pub fn from_square(sq: Square) -> Bitboard {

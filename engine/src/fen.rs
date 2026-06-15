@@ -2,6 +2,7 @@
 
 use crate::position::Position;
 use crate::types::{CastleRights, Color, Piece, Square};
+use std::str::FromStr;
 
 pub const START_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -67,7 +68,7 @@ pub fn parse(fen: &str) -> Result<Position, String> {
     pos.ep = if fields[3] == "-" {
         None
     } else {
-        Some(Square::from_str(fields[3]).ok_or(format!("bad ep square '{}'", fields[3]))?)
+        Some(Square::from_str(fields[3]).map_err(|_| format!("bad ep square '{}'", fields[3]))?)
     };
 
     // 5/6. Clocks (optional).
