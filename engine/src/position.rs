@@ -196,7 +196,7 @@ impl Position {
             MoveFlag::Quiet => self.move_piece(from, to),
             MoveFlag::DoublePush => {
                 self.move_piece(from, to);
-                let ep_sq = Square(((from.0 + to.0) / 2) as u8);
+                let ep_sq = Square((from.0 + to.0) / 2);
                 self.ep = Some(ep_sq);
                 self.hash ^= zobrist::ep_file(ep_sq.file());
             }

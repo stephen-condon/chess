@@ -79,11 +79,6 @@ impl Move {
         (self.0 >> 12) >= 8
     }
 
-    #[inline]
-    pub fn is_en_passant(self) -> bool {
-        self.flag() == MoveFlag::EnPassant
-    }
-
     /// The piece a pawn promotes to, if this is a promotion.
     pub fn promotion(self) -> Option<PieceType> {
         if !self.is_promotion() {
@@ -99,7 +94,7 @@ impl Move {
 
     /// UCI string, e.g. "e2e4" or "e7e8q".
     pub fn to_uci(self) -> String {
-        let mut s = format!("{}{}", self.from().to_string(), self.to().to_string());
+        let mut s = format!("{}{}", self.from(), self.to());
         if let Some(p) = self.promotion() {
             s.push(p.to_char());
         }
@@ -141,23 +136,10 @@ impl MoveList {
     pub fn as_slice(&self) -> &[Move] {
         &self.moves[..self.len]
     }
-
-    #[inline]
-    pub fn as_mut_slice(&mut self) -> &mut [Move] {
-        &mut self.moves[..self.len]
-    }
 }
 
 impl Default for MoveList {
     fn default() -> Self {
         MoveList::new()
-    }
-}
-
-impl<'a> IntoIterator for &'a MoveList {
-    type Item = &'a Move;
-    type IntoIter = std::slice::Iter<'a, Move>;
-    fn into_iter(self) -> Self::IntoIter {
-        self.as_slice().iter()
     }
 }

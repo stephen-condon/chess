@@ -153,7 +153,7 @@ where
     let n = played.len();
 
     let start_side = start_pos.side_to_move();
-    let mover = |i: usize| if i % 2 == 0 { start_side } else { start_side.opp() };
+    let mover = |i: usize| if i.is_multiple_of(2) { start_side } else { start_side.opp() };
 
     // white_eval[i] = White-relative centipawn evaluation of the position
     // before move i is played, for i in 0..=n (white_eval[n] is the final

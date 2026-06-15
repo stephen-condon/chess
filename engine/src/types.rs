@@ -1,5 +1,8 @@
 //! Core value types: colors, piece kinds, squares, castling rights.
 
+use std::fmt;
+use std::str::FromStr;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum Color {
     White,
@@ -133,26 +136,32 @@ impl Square {
     pub fn index(self) -> usize {
         self.0 as usize
     }
+}
 
-    /// Algebraic name, e.g. "e4".
-    pub fn to_string(self) -> String {
+/// Algebraic name, e.g. "e4".
+impl fmt::Display for Square {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let file = (b'a' + self.file()) as char;
         let rank = (b'1' + self.rank()) as char;
-        format!("{}{}", file, rank)
+        write!(f, "{}{}", file, rank)
     }
+}
 
-    /// Parse algebraic name, e.g. "e4".
-    pub fn from_str(s: &str) -> Option<Square> {
+/// Parse algebraic name, e.g. "e4".
+impl FromStr for Square {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Square, String> {
         let bytes = s.as_bytes();
         if bytes.len() != 2 {
-            return None;
+            return Err(format!("bad square '{}'", s));
         }
-        let file = bytes[0].checked_sub(b'a')?;
-        let rank = bytes[1].checked_sub(b'1')?;
+        let file = bytes[0].checked_sub(b'a').ok_or_else(|| format!("bad square '{}'", s))?;
+        let rank = bytes[1].checked_sub(b'1').ok_or_else(|| format!("bad square '{}'", s))?;
         if file < 8 && rank < 8 {
-            Some(Square::from_file_rank(file, rank))
+            Ok(Square::from_file_rank(file, rank))
         } else {
-            None
+            Err(format!("bad square '{}'", s))
         }
     }
 }
@@ -179,11 +188,6 @@ impl CastleRights {
     #[inline]
     pub fn add(&mut self, flag: u8) {
         self.0 |= flag;
-    }
-
-    #[inline]
-    pub fn remove(&mut self, flag: u8) {
-        self.0 &= !flag;
     }
 
     #[inline]

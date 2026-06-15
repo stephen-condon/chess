@@ -11,6 +11,7 @@ pub mod movegen;
 pub mod moves;
 pub mod pgn;
 pub mod position;
+mod rng;
 pub mod rules;
 pub mod san;
 pub mod search;

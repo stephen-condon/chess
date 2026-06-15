@@ -5,14 +5,9 @@
 use chess_engine::{
     compute_hash, eval::evaluate, fen, movegen, search, Game, SearchLimits,
 };
-use std::time::{SystemTime, UNIX_EPOCH};
 
-fn now_ms() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64
-}
+mod common;
+use common::now_ms;
 
 /// Vertically flip the board and swap colors, producing the mirror position
 /// from the other side's point of view.
