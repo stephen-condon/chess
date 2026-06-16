@@ -35,6 +35,12 @@ binary later. See `docs/superpowers/specs/2026-06-09-chess-engine-design.md`.
 - Rust (stable) + [`wasm-pack`](https://rustwasm.github.io/wasm-pack/)
 - Node.js 18+
 
+## Setup
+
+```bash
+git config core.hooksPath .githooks   # enable pre-commit checks (fmt, clippy, tests)
+```
+
 ## Run
 
 ```bash
