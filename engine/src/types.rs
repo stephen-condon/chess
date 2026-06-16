@@ -156,8 +156,12 @@ impl FromStr for Square {
         if bytes.len() != 2 {
             return Err(format!("bad square '{}'", s));
         }
-        let file = bytes[0].checked_sub(b'a').ok_or_else(|| format!("bad square '{}'", s))?;
-        let rank = bytes[1].checked_sub(b'1').ok_or_else(|| format!("bad square '{}'", s))?;
+        let file = bytes[0]
+            .checked_sub(b'a')
+            .ok_or_else(|| format!("bad square '{}'", s))?;
+        let rank = bytes[1]
+            .checked_sub(b'1')
+            .ok_or_else(|| format!("bad square '{}'", s))?;
         if file < 8 && rank < 8 {
             Ok(Square::from_file_rank(file, rank))
         } else {

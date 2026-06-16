@@ -29,7 +29,11 @@ pub fn parse(fen: &str) -> Result<Position, String> {
                 if file > 7 {
                     return Err("rank overflow in FEN".into());
                 }
-                pos.add_piece(piece.color, piece.kind, Square::from_file_rank(file as u8, rank as u8));
+                pos.add_piece(
+                    piece.color,
+                    piece.kind,
+                    Square::from_file_rank(file as u8, rank as u8),
+                );
                 file += 1;
             }
         }
@@ -88,7 +92,10 @@ pub fn parse(fen: &str) -> Result<Position, String> {
     for color in [Color::White, Color::Black] {
         let kings = pos.pieces(color, crate::types::PieceType::King).count();
         if kings != 1 {
-            return Err(format!("{:?} must have exactly one king, found {}", color, kings));
+            return Err(format!(
+                "{:?} must have exactly one king, found {}",
+                color, kings
+            ));
         }
     }
     // The side not to move must not be in check (it would be their king's turn).

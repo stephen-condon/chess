@@ -154,8 +154,26 @@ fn gen_castling(pos: &Position, us: Color, list: &mut MoveList) {
 
     // Square indices per color: (E, F, G, D, C, B).
     let (e, f, g, d, c, b, king_flag, queen_flag) = match us {
-        Color::White => (4, 5, 6, 3, 2, 1, crate::types::CastleRights::WHITE_KING, crate::types::CastleRights::WHITE_QUEEN),
-        Color::Black => (60, 61, 62, 59, 58, 57, crate::types::CastleRights::BLACK_KING, crate::types::CastleRights::BLACK_QUEEN),
+        Color::White => (
+            4,
+            5,
+            6,
+            3,
+            2,
+            1,
+            crate::types::CastleRights::WHITE_KING,
+            crate::types::CastleRights::WHITE_QUEEN,
+        ),
+        Color::Black => (
+            60,
+            61,
+            62,
+            59,
+            58,
+            57,
+            crate::types::CastleRights::BLACK_KING,
+            crate::types::CastleRights::BLACK_QUEEN,
+        ),
     };
     let sq = |i: u8| Square(i);
 

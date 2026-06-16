@@ -29,8 +29,15 @@ fn flags_a_hanging_queen_as_a_blunder_and_turning_point() {
     let blunder = &report.moves[0];
     assert_eq!(blunder.san, "Qd4");
     assert_eq!(blunder.class, MoveClass::Blunder);
-    assert!(blunder.cpl >= 200, "expected a large cpl, got {}", blunder.cpl);
-    assert!(blunder.turning_point, "Qd4 should flip the evaluation bucket");
+    assert!(
+        blunder.cpl >= 200,
+        "expected a large cpl, got {}",
+        blunder.cpl
+    );
+    assert!(
+        blunder.turning_point,
+        "Qd4 should flip the evaluation bucket"
+    );
 }
 
 #[test]
@@ -49,7 +56,10 @@ fn fools_mate_is_decided_by_the_losing_blunder() {
     let g4 = &report.moves[2];
     assert_eq!(g4.san, "g4");
     assert_eq!(g4.class, MoveClass::Blunder);
-    assert!(g4.decided_game, "g4 should be marked as the decisive blunder");
+    assert!(
+        g4.decided_game,
+        "g4 should be marked as the decisive blunder"
+    );
 
     // Exactly one move is marked as deciding the game.
     assert_eq!(report.moves.iter().filter(|m| m.decided_game).count(), 1);
@@ -78,7 +88,9 @@ fn handles_a_single_ply_game() {
     game.play_san("e4").unwrap();
 
     let mut calls = Vec::new();
-    let report = analyze(&mut game, LIMITS, now_ms, |done, total| calls.push((done, total)));
+    let report = analyze(&mut game, LIMITS, now_ms, |done, total| {
+        calls.push((done, total))
+    });
 
     assert_eq!(report.moves.len(), 1);
     assert_eq!(calls, vec![(1, 1)]);
@@ -96,7 +108,9 @@ fn handles_custom_start_position_with_setup_tag() {
 
     let report = analyze(&mut game, LIMITS, now_ms, |_, _| {});
     assert!(report.annotated_pgn.contains("[SetUp \"1\"]"));
-    assert!(report.annotated_pgn.contains(&format!("[FEN \"{}\"]", custom_fen)));
+    assert!(report
+        .annotated_pgn
+        .contains(&format!("[FEN \"{}\"]", custom_fen)));
 
     let replayed = pgn::from_pgn(&report.annotated_pgn).expect("annotated PGN should parse");
     assert_eq!(replayed.san_history(), game.san_history());

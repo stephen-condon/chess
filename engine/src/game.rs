@@ -1,12 +1,12 @@
 //! High-level game state: a position plus move/SAN/repetition history and the
 //! rules for game termination. This is the engine's public façade.
 
+use crate::fen;
 use crate::movegen;
 use crate::moves::{Move, MoveList};
 use crate::position::{Position, Undo};
 use crate::rules::{self, DrawReason, Status};
 use crate::san;
-use crate::fen;
 use crate::types::{Color, PieceType, Square};
 use std::str::FromStr;
 

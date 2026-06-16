@@ -90,8 +90,5 @@ fn pgn_round_trip_from_played_game() {
 fn pgn_import_with_numbers_and_comments() {
     let pgn_text = "1. e4 {best by test} e5 2. Nf3 (2. f4 exf4) Nc6 3. Bb5 a6 *";
     let g = pgn::from_pgn(pgn_text).expect("import");
-    assert_eq!(
-        g.san_history(),
-        &["e4", "e5", "Nf3", "Nc6", "Bb5", "a6"]
-    );
+    assert_eq!(g.san_history(), &["e4", "e5", "Nf3", "Nc6", "Bb5", "a6"]);
 }
