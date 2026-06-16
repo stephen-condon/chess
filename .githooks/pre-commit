@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -e
+
+cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test -p chess-engine -- --skip perft_
+cd web && npx tsc --noEmit
