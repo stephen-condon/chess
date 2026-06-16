@@ -6,7 +6,8 @@
 //! strings and positions/games as FEN/PGN.
 
 use chess_engine::{
-    fen, pgn, Color, DrawReason, Game as CoreGame, MoveClass, PieceType, SearchLimits, SideSummary, Status,
+    fen, pgn, Color, DrawReason, Game as CoreGame, MoveClass, PieceType, SearchLimits, SideSummary,
+    Status,
 };
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
@@ -249,7 +250,12 @@ impl Game {
     /// Apply a move by square indices, with an optional promotion piece
     /// ("q"|"r"|"b"|"n"). Returns the SAN, new FEN, and game status.
     #[wasm_bindgen(js_name = makeMove)]
-    pub fn make_move(&mut self, from: u8, to: u8, promotion: Option<String>) -> Result<JsValue, JsValue> {
+    pub fn make_move(
+        &mut self,
+        from: u8,
+        to: u8,
+        promotion: Option<String>,
+    ) -> Result<JsValue, JsValue> {
         let promo = promotion
             .as_deref()
             .and_then(|s| s.chars().next())
@@ -322,15 +328,29 @@ pub fn search(fen_str: &str, time_ms: u32, max_depth: u8) -> Result<JsValue, JsV
 /// `progress(done, total)` is called once per searched position so the caller
 /// can report progress for long games.
 #[wasm_bindgen]
-pub fn analyze(pgn_str: &str, time_ms: u32, max_depth: u8, progress: &js_sys::Function) -> Result<JsValue, JsValue> {
+pub fn analyze(
+    pgn_str: &str,
+    time_ms: u32,
+    max_depth: u8,
+    progress: &js_sys::Function,
+) -> Result<JsValue, JsValue> {
     let mut game = pgn::from_pgn(pgn_str).map_err(err_to_js)?;
     let limits = SearchLimits {
         max_depth,
         time_ms: time_ms as u64,
     };
-    let report = chess_engine::analyze(&mut game, limits, || js_sys::Date::now() as u64, |done, total| {
-        let _ = progress.call2(&JsValue::NULL, &JsValue::from(done as u32), &JsValue::from(total as u32));
-    });
+    let report = chess_engine::analyze(
+        &mut game,
+        limits,
+        || js_sys::Date::now() as u64,
+        |done, total| {
+            let _ = progress.call2(
+                &JsValue::NULL,
+                &JsValue::from(done as u32),
+                &JsValue::from(total as u32),
+            );
+        },
+    );
 
     let info = GameReportInfo {
         moves: report

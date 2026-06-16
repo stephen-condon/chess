@@ -2,9 +2,7 @@
 //!
 //! Run with `cargo test -p chess-engine --release`.
 
-use chess_engine::{
-    compute_hash, eval::evaluate, fen, movegen, search, Game, SearchLimits,
-};
+use chess_engine::{compute_hash, eval::evaluate, fen, movegen, search, Game, SearchLimits};
 
 mod common;
 use common::now_ms;
@@ -117,9 +115,15 @@ fn opening_move_is_reasonable() {
         },
         now_ms,
     );
-    let sane = ["e2e4", "d2d4", "c2c4", "g1f3", "b1c3", "e2e3", "d2d3", "g2g3"];
+    let sane = [
+        "e2e4", "d2d4", "c2c4", "g1f3", "b1c3", "e2e3", "d2d3", "g2g3",
+    ];
     let mv = res.best_move.unwrap().to_uci();
-    assert!(sane.contains(&mv.as_str()), "unexpected opening move {}", mv);
+    assert!(
+        sane.contains(&mv.as_str()),
+        "unexpected opening move {}",
+        mv
+    );
 }
 
 #[test]

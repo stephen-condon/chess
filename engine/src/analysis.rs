@@ -140,7 +140,12 @@ pub struct GameReport {
 ///
 /// `progress(done, total)` is called once per searched position so callers can
 /// report progress for long games.
-pub fn analyze<F, P>(game: &mut Game, limits: SearchLimits, now_ms: F, mut progress: P) -> GameReport
+pub fn analyze<F, P>(
+    game: &mut Game,
+    limits: SearchLimits,
+    now_ms: F,
+    mut progress: P,
+) -> GameReport
 where
     F: Fn() -> u64,
     P: FnMut(usize, usize),
@@ -153,7 +158,13 @@ where
     let n = played.len();
 
     let start_side = start_pos.side_to_move();
-    let mover = |i: usize| if i.is_multiple_of(2) { start_side } else { start_side.opp() };
+    let mover = |i: usize| {
+        if i.is_multiple_of(2) {
+            start_side
+        } else {
+            start_side.opp()
+        }
+    };
 
     // white_eval[i] = White-relative centipawn evaluation of the position
     // before move i is played, for i in 0..=n (white_eval[n] is the final
@@ -171,7 +182,11 @@ where
 
         let stm = pos.side_to_move();
         let res = search(&pos, limits, now_ref);
-        white_eval[i] = if stm == Color::White { res.score } else { -res.score };
+        white_eval[i] = if stm == Color::White {
+            res.score
+        } else {
+            -res.score
+        };
 
         let pv = pv_to_san(&pos, &res.pv, PV_PLIES);
         best_sans.push(pv.first().cloned().unwrap_or_default());
@@ -342,8 +357,16 @@ fn side_summary(moves: &[AnalyzedMove], color: Color, white_eval: &[i32]) -> Sid
     }
 
     SideSummary {
-        accuracy: if count > 0 { (total_acc / count as f64) as f32 } else { 100.0 },
-        avg_cpl: if count > 0 { (total_cpl / count as i64) as i32 } else { 0 },
+        accuracy: if count > 0 {
+            (total_acc / count as f64) as f32
+        } else {
+            100.0
+        },
+        avg_cpl: if count > 0 {
+            (total_cpl / count as i64) as i32
+        } else {
+            0
+        },
         best,
         inaccuracies,
         mistakes,
@@ -374,7 +397,12 @@ fn format_eval(white_cp: i32) -> String {
 /// a summary comment, and per-move eval/NAG/best-move annotations. Comments
 /// and variations are all `{}`/`()`-delimited so [`crate::pgn::from_pgn`]
 /// reproduces the original move list unchanged.
-fn to_annotated_pgn(game: &mut Game, report: &GameReport, white_eval: &[i32], max_depth: u8) -> String {
+fn to_annotated_pgn(
+    game: &mut Game,
+    report: &GameReport,
+    white_eval: &[i32],
+    max_depth: u8,
+) -> String {
     let start = fen::parse(game.start_fen()).expect("valid start FEN");
     let n = report.moves.len();
 
@@ -411,9 +439,18 @@ fn to_annotated_pgn(game: &mut Game, report: &GameReport, white_eval: &[i32], ma
         out.push_str("[SetUp \"1\"]\n");
         out.push_str(&format!("[FEN \"{}\"]\n", game.start_fen()));
     }
-    out.push_str(&format!("[Annotator \"chess engine (depth {})\"]\n", max_depth));
-    out.push_str(&format!("[WhiteAccuracy \"{:.1}\"]\n", report.white.accuracy));
-    out.push_str(&format!("[BlackAccuracy \"{:.1}\"]\n", report.black.accuracy));
+    out.push_str(&format!(
+        "[Annotator \"chess engine (depth {})\"]\n",
+        max_depth
+    ));
+    out.push_str(&format!(
+        "[WhiteAccuracy \"{:.1}\"]\n",
+        report.white.accuracy
+    ));
+    out.push_str(&format!(
+        "[BlackAccuracy \"{:.1}\"]\n",
+        report.black.accuracy
+    ));
     out.push('\n');
 
     let mut summary = format!(
@@ -428,7 +465,11 @@ fn to_annotated_pgn(game: &mut Game, report: &GameReport, white_eval: &[i32], ma
         report.black.inaccuracies,
     );
     if let Some(decisive) = report.moves.iter().find(|m| m.decided_game) {
-        let ellipsis = if decisive.color == Color::White { "." } else { "..." };
+        let ellipsis = if decisive.color == Color::White {
+            "."
+        } else {
+            "..."
+        };
         summary.push_str(&format!(
             " The decisive moment was {}{} {} ({}).",
             full_move_no[decisive.ply],
@@ -483,7 +524,10 @@ mod tests {
         assert_eq!(MoveClass::from_cpl(BEST_CP), MoveClass::Good);
         assert_eq!(MoveClass::from_cpl(GOOD_CP - 1), MoveClass::Good);
         assert_eq!(MoveClass::from_cpl(GOOD_CP), MoveClass::Inaccuracy);
-        assert_eq!(MoveClass::from_cpl(INACCURACY_CP - 1), MoveClass::Inaccuracy);
+        assert_eq!(
+            MoveClass::from_cpl(INACCURACY_CP - 1),
+            MoveClass::Inaccuracy
+        );
         assert_eq!(MoveClass::from_cpl(INACCURACY_CP), MoveClass::Mistake);
         assert_eq!(MoveClass::from_cpl(MISTAKE_CP - 1), MoveClass::Mistake);
         assert_eq!(MoveClass::from_cpl(MISTAKE_CP), MoveClass::Blunder);
