@@ -17,10 +17,10 @@ fn keys() -> &'static Keys {
     KEYS.get_or_init(|| {
         let mut rng = SplitMix64::new(0xD1B5_4A32_D192_ED03);
         let mut pieces = [[[0u64; 64]; 6]; 2];
-        for c in 0..2 {
-            for p in 0..6 {
-                for s in 0..64 {
-                    pieces[c][p][s] = rng.next();
+        for plane in pieces.iter_mut() {
+            for row in plane.iter_mut() {
+                for cell in row.iter_mut() {
+                    *cell = rng.next();
                 }
             }
         }
