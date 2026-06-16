@@ -326,11 +326,11 @@ impl Position {
 fn castle_mask(sq: Square) -> u8 {
     const ALL: u8 = 0b1111;
     match sq.0 {
-        0 => ALL & !CastleRights::WHITE_QUEEN,                            // a1
-        7 => ALL & !CastleRights::WHITE_KING,                            // h1
+        0 => ALL & !CastleRights::WHITE_QUEEN, // a1
+        7 => ALL & !CastleRights::WHITE_KING,  // h1
         4 => ALL & !(CastleRights::WHITE_KING | CastleRights::WHITE_QUEEN), // e1
-        56 => ALL & !CastleRights::BLACK_QUEEN,                           // a8
-        63 => ALL & !CastleRights::BLACK_KING,                           // h8
+        56 => ALL & !CastleRights::BLACK_QUEEN, // a8
+        63 => ALL & !CastleRights::BLACK_KING, // h8
         60 => ALL & !(CastleRights::BLACK_KING | CastleRights::BLACK_QUEEN), // e8
         _ => ALL,
     }
