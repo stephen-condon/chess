@@ -34,8 +34,30 @@ page.on("response", (r) => {
 
 await page.goto(url, { waitUntil: "networkidle" });
 
-// Board renders 64 squares once the engine has loaded.
-await page.waitForSelector(".square");
+// --- Helpers ---
+const sq = (name) => {
+  const file = name.charCodeAt(0) - 97;
+  const rank = name.charCodeAt(1) - 49;
+  return rank * 8 + file;
+};
+const clickSquare = async (name) => page.locator(".square").nth(sq(name)).click();
+
+// Navigate through the menu to start a game.
+// mode: "computer" | "hotseat" (default "hotseat" to avoid AI interference in basic tests)
+const startGame = async (mode = "hotseat") => {
+  const menuVisible = await page.locator("#menu").isVisible();
+  if (!menuVisible) {
+    page.once("dialog", (d) => d.accept());
+    await page.locator("#menu-btn").click();
+  }
+  await page.locator("#menu-new-game").click();
+  await page.locator(`#menu-mode-row .toggle[data-val="${mode}"]`).click();
+  await page.locator("#menu-play").click();
+  await page.waitForSelector(".square");
+};
+
+// Board renders 64 squares after navigating menu to start a hotseat game.
+await startGame("hotseat");
 const squares = await page.locator(".square").count();
 check(squares === 64, "board renders 64 squares");
 const pieces = await page.locator(".piece").count();
@@ -44,14 +66,6 @@ check(
   (await page.locator("#status").textContent())?.includes("White to move"),
   "status shows White to move"
 );
-
-// --- Hotseat move: click e2 then e4 ---
-const sq = (name) => {
-  const file = name.charCodeAt(0) - 97;
-  const rank = name.charCodeAt(1) - 49;
-  return rank * 8 + file;
-};
-const clickSquare = async (name) => page.locator(".square").nth(sq(name)).click();
 
 await clickSquare("e2");
 const targets = await page.locator(".square.target, .square.capture").count();
@@ -65,9 +79,9 @@ await page
 const movesText = await page.locator("#moves").textContent();
 check(movesText?.includes("e4"), "e2-e4 appears in the move list");
 
-// --- Vs computer: switch mode, the engine should reply via the worker ---
-await page.selectOption("#mode", "computer");
-// New game starts (human = white). Play a move and wait for a black reply.
+// --- Vs computer: start a new game in computer mode via menu ---
+await startGame("computer");
+// Human = white by default. Play a move and wait for a black reply.
 await clickSquare("e2");
 await clickSquare("e4");
 let vsText = "";
@@ -103,7 +117,7 @@ const today = (() => {
 check(dateLine === `[Date "${today}"]`, `PGN export carries today's date (got ${dateLine})`);
 
 // --- Game analyzer: forced mate enables Analyze, producing an annotated PGN ---
-await page.selectOption("#mode", "hotseat");
+await startGame("hotseat");
 check(await page.locator("#analyze-game").isDisabled(), "Analyze button disabled while game is ongoing");
 
 for (const [from, to] of [

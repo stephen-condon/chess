@@ -6,6 +6,7 @@ import {
   DIFFICULTIES,
   type AnalysisSpeed,
   type Difficulty,
+  type GameConfig,
   type GameReport,
   type Mode,
   type MoveResult,
@@ -397,27 +398,6 @@ function wireControls(): void {
   });
   $("undo").addEventListener("click", undoMove);
 
-  const modeSel = $<HTMLSelectElement>("mode");
-  modeSel.addEventListener("change", () => {
-    mode = modeSel.value as Mode;
-    $("side-row").hidden = mode !== "computer";
-    $("difficulty-row").hidden = mode !== "computer";
-    newGame();
-  });
-
-  const sideSel = $<HTMLSelectElement>("human-side");
-  sideSel.addEventListener("change", () => {
-    humanSide = sideSel.value as Side;
-    whiteBottom = humanSide === "white";
-    board.setOrientation(whiteBottom);
-    newGame();
-  });
-
-  const diffSel = $<HTMLSelectElement>("difficulty");
-  diffSel.addEventListener("change", () => {
-    difficulty = diffSel.value as Difficulty;
-  });
-
   $("load-fen").addEventListener("click", () => {
     loadFromFen($<HTMLInputElement>("fen").value.trim());
   });
@@ -451,11 +431,99 @@ function wireControls(): void {
   }
 }
 
+// --- Menu ------------------------------------------------------------------
+
+function showMenuHome(): void {
+  $("menu-home").hidden = false;
+  $("menu-config").hidden = true;
+  $("menu-prefs").hidden = true;
+}
+
+function showMenuConfig(): void {
+  $("menu-home").hidden = true;
+  $("menu-config").hidden = false;
+  $("menu-prefs").hidden = true;
+  updateConfigSideVisibility();
+}
+
+function updateConfigSideVisibility(): void {
+  const isComputer =
+    document.querySelector<HTMLElement>("#menu-mode-row .toggle.active")?.dataset.val ===
+    "computer";
+  $("menu-side-row").hidden = !isComputer;
+  $("menu-difficulty-row").hidden = !isComputer;
+}
+
+function showMenu(): void {
+  showMenuHome();
+  $("menu").hidden = false;
+}
+
+function stopGame(): void {
+  searchId += 1;
+  thinking = false;
+  analyzing = false;
+}
+
+function startGame(config: GameConfig): void {
+  mode = config.mode;
+  humanSide = config.humanSide;
+  difficulty = config.difficulty;
+  whiteBottom = humanSide === "white";
+  board.setOrientation(whiteBottom);
+  game = new Game();
+  $("menu").hidden = true;
+  $("app").hidden = false;
+  resetAfterLoad();
+}
+
+function wireMenuControls(): void {
+  $("menu-new-game").addEventListener("click", showMenuConfig);
+  $("menu-back").addEventListener("click", showMenuHome);
+  $("menu-prefs-back").addEventListener("click", showMenuHome);
+
+  $("menu-play").addEventListener("click", () => {
+    const activeMode = document.querySelector<HTMLButtonElement>(
+      "#menu-mode-row .toggle.active",
+    )!.dataset.val as Mode;
+    const activeSide = document.querySelector<HTMLButtonElement>(
+      "#menu-side-row .toggle.active",
+    )!.dataset.val as Side;
+    const activeDiff = $<HTMLSelectElement>("cfg-difficulty").value as Difficulty;
+    startGame({ mode: activeMode, humanSide: activeSide, difficulty: activeDiff });
+  });
+
+  for (const btn of document.querySelectorAll<HTMLButtonElement>("#menu-mode-row .toggle")) {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll<HTMLButtonElement>("#menu-mode-row .toggle")
+        .forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      updateConfigSideVisibility();
+    });
+  }
+  for (const btn of document.querySelectorAll<HTMLButtonElement>("#menu-side-row .toggle")) {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll<HTMLButtonElement>("#menu-side-row .toggle")
+        .forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  }
+
+  $("menu-btn").addEventListener("click", () => {
+    const inProgress =
+      (game.status() as StatusInfo).state === "ongoing" && game.historySan().length > 0;
+    if (inProgress && !confirm("Abandon current game and return to menu?")) return;
+    stopGame();
+    showMenu();
+  });
+}
+
 // --- Boot ------------------------------------------------------------------
 
 async function boot(): Promise<void> {
   await loadEngine();
-  game = new Game();
   board = new Board(boardEl, onSquareClick);
   worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = onWorkerMessage;
@@ -465,7 +533,8 @@ async function boot(): Promise<void> {
     render();
   };
   wireControls();
-  render();
+  wireMenuControls();
+  showMenu();
 }
 
 void boot();

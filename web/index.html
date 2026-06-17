@@ -7,7 +7,53 @@
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <main class="app">
+    <div id="menu" class="menu-overlay">
+      <div class="menu-card">
+        <div id="menu-home">
+          <h1 class="menu-title">♟ Chess</h1>
+          <button id="menu-new-game" class="btn">New Game</button>
+          <button id="menu-preferences" class="btn" disabled>Preferences</button>
+        </div>
+
+        <div id="menu-config" hidden>
+          <h2 class="menu-config-title">New Game</h2>
+          <div class="config-row" id="menu-mode-row">
+            <label>Mode</label>
+            <div class="toggle-group">
+              <button class="toggle active" data-val="computer">vs Computer</button>
+              <button class="toggle" data-val="hotseat">Hotseat</button>
+            </div>
+          </div>
+          <div class="config-row" id="menu-side-row">
+            <label>Play as</label>
+            <div class="toggle-group">
+              <button class="toggle active" data-val="white">White</button>
+              <button class="toggle" data-val="black">Black</button>
+            </div>
+          </div>
+          <div class="config-row" id="menu-difficulty-row">
+            <label>Difficulty</label>
+            <select id="cfg-difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div class="config-actions">
+            <button id="menu-back" class="btn secondary">Back</button>
+            <button id="menu-play" class="btn">Play</button>
+          </div>
+        </div>
+
+        <div id="menu-prefs" hidden>
+          <h2 class="menu-config-title">Preferences</h2>
+          <p class="menu-empty">Nothing here yet.</p>
+          <button id="menu-prefs-back" class="btn secondary">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <main id="app" class="app" hidden>
       <section class="board-area">
         <div id="board" class="board" aria-label="Chess board"></div>
       </section>
@@ -18,34 +64,10 @@
         <div id="status" class="status">White to move</div>
 
         <div class="controls">
+          <button id="menu-btn" class="btn">Menu</button>
           <button id="new-game" class="btn">New Game</button>
           <button id="flip" class="btn">Flip</button>
           <button id="undo" class="btn">Undo</button>
-        </div>
-
-        <div class="control-row">
-          <label for="mode">Mode</label>
-          <select id="mode">
-            <option value="hotseat">Hotseat (2 players)</option>
-            <option value="computer">Vs Computer</option>
-          </select>
-        </div>
-
-        <div class="control-row" id="side-row" hidden>
-          <label for="human-side">Play as</label>
-          <select id="human-side">
-            <option value="white">White</option>
-            <option value="black">Black</option>
-          </select>
-        </div>
-
-        <div class="control-row" id="difficulty-row" hidden>
-          <label for="difficulty">Difficulty</label>
-          <select id="difficulty">
-            <option value="easy">Easy</option>
-            <option value="medium" selected>Medium</option>
-            <option value="hard">Hard</option>
-          </select>
         </div>
 
         <div class="moves-wrap">

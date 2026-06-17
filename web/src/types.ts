@@ -34,6 +34,12 @@ export type Mode = "hotseat" | "computer";
 export type Side = "white" | "black";
 export type Difficulty = "easy" | "medium" | "hard";
 
+export interface GameConfig {
+  mode: Mode;
+  humanSide: Side;
+  difficulty: Difficulty;
+}
+
 export interface DifficultySetting {
   timeMs: number;
   maxDepth: number;
