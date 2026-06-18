@@ -86,3 +86,7 @@ Moves cross the WASM boundary as **UCI strings** (e.g. `"e2e4"`). Positions cros
 - UI + full stack: Playwright E2E (`web/e2e.mjs`)
 
 Perft tests are slow — they're excluded from the pre-commit hook (`--skip perft_`) but run in CI (`cargo test --release --workspace`).
+
+## Definition of Done
+
+**Important**: When implementing any feature, a critical part of the definition of done is to ensure README.md & CLAUDE.md are updated with any relevant information. Documentation updates are required if any change affects an aspect of the application discussed in one of the documentation files.
