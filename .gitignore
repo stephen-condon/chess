@@ -14,3 +14,6 @@ web/screenshot.png
 
 # brainstorming visual companion
 .superpowers/
+
+# git worktrees
+.worktrees/
