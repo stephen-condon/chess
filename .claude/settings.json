@@ -1,6 +1,5 @@
 {
   "worktree": {
-    "symlinkDirectories": ["web/node_modules"],
     "bgIsolation": "worktree"
   }
 }
