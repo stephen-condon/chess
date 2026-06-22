@@ -32,7 +32,7 @@ export interface SearchInfo {
 
 export type Mode = "hotseat" | "computer";
 export type Side = "white" | "black";
-export type Difficulty = "easy" | "medium" | "hard";
+export type Difficulty = "very-easy" | "easy" | "medium" | "hard";
 
 export interface GameConfig {
   mode: Mode;
@@ -46,6 +46,7 @@ export interface DifficultySetting {
 }
 
 export const DIFFICULTIES: Record<Difficulty, DifficultySetting> = {
+  "very-easy": { timeMs: 50, maxDepth: 1 },
   easy: { timeMs: 150, maxDepth: 3 },
   medium: { timeMs: 600, maxDepth: 8 },
   hard: { timeMs: 2000, maxDepth: 64 },
