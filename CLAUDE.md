@@ -43,7 +43,7 @@ cd web && npm install
 cd web && npm run dev        # dev server (builds WASM first)
 cd web && npm run build      # production build
 cd web && npm run e2e        # Playwright E2E tests (requires built app)
-cd web && npx tsc --noEmit   # TypeScript type check
+cd web && npm run typecheck   # TypeScript type check
 ```
 
 ## CI Pipeline
