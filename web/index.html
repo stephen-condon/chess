@@ -12,7 +12,14 @@
         <div id="menu-home">
           <h1 class="menu-title">♟ Chess</h1>
           <button id="menu-new-game" class="btn">New Game</button>
+          <button id="menu-training-btn" class="btn">Training</button>
           <button id="menu-preferences" class="btn" disabled>Preferences</button>
+        </div>
+
+        <div id="menu-training" hidden>
+          <h2 class="menu-config-title">Trainings</h2>
+          <div id="training-challenge-list"></div>
+          <button id="menu-training-back" class="btn secondary">Back</button>
         </div>
 
         <div id="menu-config" hidden>
@@ -110,6 +117,17 @@
         <p id="io-error" class="io-error" role="alert"></p>
       </aside>
     </main>
+
+    <!-- Training complete overlay -->
+    <div id="training-complete" class="promotion" hidden>
+      <div class="promotion-box">
+        <p>Challenge complete! 🎉</p>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button id="training-next-btn" class="btn">Next Challenge</button>
+          <button id="training-menu-btn" class="btn secondary">Back to Training</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Promotion picker overlay -->
     <div id="promotion" class="promotion" hidden>

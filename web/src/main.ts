@@ -14,6 +14,13 @@ import {
   type StatusInfo,
 } from "./types.js";
 import type { SearchRequest, WorkerResponse } from "./worker.js";
+import {
+  CHALLENGES,
+  getCompleted,
+  isUnlocked,
+  markComplete,
+  type TrainingChallenge,
+} from "./training.js";
 
 // --- DOM helpers -----------------------------------------------------------
 
@@ -42,6 +49,7 @@ let mode: Mode = "hotseat";
 let humanSide: Side = "white";
 let difficulty: Difficulty = "medium";
 let whiteBottom = true;
+let activeChallenge: TrainingChallenge | null = null;
 
 let selected: number | null = null;
 let targets: number[] = [];
@@ -141,6 +149,11 @@ function applyMove(from: number, to: number, promo?: string): void {
   selected = null;
   targets = [];
   render();
+
+  if (activeChallenge && result.status.state === "checkmate" && result.status.winner === "white") {
+    handleTrainingComplete();
+    return;
+  }
 
   if (result.status.state === "ongoing" && mode === "computer") {
     if (result.status.turn !== humanSide) triggerAI();
@@ -319,6 +332,10 @@ function deselect(): void {
 // --- Controls --------------------------------------------------------------
 
 function newGame(): void {
+  if (activeChallenge) {
+    startTraining(activeChallenge);
+    return;
+  }
   searchId += 1; // invalidate any in-flight search
   thinking = false;
   game = new Game();
@@ -437,6 +454,7 @@ function showMenuHome(): void {
   $("menu-home").hidden = false;
   $("menu-config").hidden = true;
   $("menu-prefs").hidden = true;
+  $("menu-training").hidden = true;
 }
 
 function showMenuConfig(): void {
@@ -463,6 +481,8 @@ function stopGame(): void {
   searchId += 1;
   thinking = false;
   analyzing = false;
+  activeChallenge = null;
+  $("training-complete").hidden = true;
 }
 
 function startGame(config: GameConfig): void {
@@ -477,8 +497,67 @@ function startGame(config: GameConfig): void {
   resetAfterLoad();
 }
 
+// --- Training ------------------------------------------------------------------
+
+function showMenuTraining(): void {
+  $("menu-home").hidden = true;
+  $("menu-config").hidden = true;
+  $("menu-prefs").hidden = true;
+  $("menu-training").hidden = false;
+  renderTrainingList();
+}
+
+function renderTrainingList(): void {
+  const container = $("training-challenge-list");
+  container.replaceChildren();
+  const completed = getCompleted();
+  CHALLENGES.forEach((challenge, i) => {
+    const unlocked = isUnlocked(i);
+    const done = completed.includes(challenge.id);
+    const card = document.createElement("div");
+    card.className = `training-card${unlocked ? "" : " locked"}${done ? " done" : ""}`;
+    const name = document.createElement("strong");
+    name.textContent = challenge.title;
+    const desc = document.createElement("p");
+    desc.textContent = challenge.description;
+    card.append(name, desc);
+    if (unlocked) card.addEventListener("click", () => { startTraining(challenge); });
+    container.appendChild(card);
+  });
+}
+
+function startTraining(challenge: TrainingChallenge): void {
+  activeChallenge = challenge;
+  mode = "computer";
+  humanSide = "white";
+  difficulty = "medium";
+  whiteBottom = true;
+  board.setOrientation(true);
+  game = Game.fromFen(challenge.fen);
+  $("menu").hidden = true;
+  $("app").hidden = false;
+  resetAfterLoad();
+}
+
+function handleTrainingComplete(): void {
+  markComplete(activeChallenge!.id);
+  const idx = CHALLENGES.findIndex((c) => c.id === activeChallenge!.id);
+  const next = CHALLENGES[idx + 1];
+  const nextBtn = $<HTMLButtonElement>("training-next-btn");
+  nextBtn.hidden = !next;
+  if (next) nextBtn.onclick = () => { $("training-complete").hidden = true; startTraining(next); };
+  $("training-complete").hidden = false;
+}
+
 function wireMenuControls(): void {
   $("menu-new-game").addEventListener("click", showMenuConfig);
+  $("menu-training-btn").addEventListener("click", showMenuTraining);
+  $("menu-training-back").addEventListener("click", showMenuHome);
+  $("training-menu-btn").addEventListener("click", () => {
+    stopGame();
+    $("menu").hidden = false;
+    showMenuTraining();
+  });
   $("menu-back").addEventListener("click", showMenuHome);
   $("menu-prefs-back").addEventListener("click", showMenuHome);
 
